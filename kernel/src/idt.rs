@@ -1,6 +1,5 @@
 use core::arch::asm;
 
-
 const IDT_SIZE: usize = 256;
 
 #[derive(Clone, Copy)]
@@ -28,7 +27,7 @@ impl Entry {
 
     fn new(handler: u64, selector: u16) -> Entry {
         let offset_low = (handler & 0xFFFF) as u16; // 0000 0000 0000 0000
-                                                         // F    F    F    F
+        // F    F    F    F
         let offset_mid = ((handler >> 16) & 0xFFFF) as u16;
         let offset_high = (handler >> 32) as u32;
 
@@ -64,6 +63,10 @@ pub struct InterruptStackFrame {
     ss: u64,
 }
 
+extern "x86-interrupt" fn divide_handler(frame: InterruptStackFrame) {
+    crate::kprintln!("EXCEPTION: DIVIDE ERROR\n{:#x?}", frame);
+    loop {}
+}
 extern "x86-interrupt" fn breakpoint_handler(frame: InterruptStackFrame) {
     crate::kprintln!("EXCEPTION: BREAKPOINT\n{:#x?}", frame);
 }
@@ -83,6 +86,7 @@ pub fn init() {
     let cs = read_cs();
 
     unsafe {
+        IDT[0] = Entry::new(divide_handler as *const () as u64, cs);
         IDT[3] = Entry::new(breakpoint_handler as *const () as u64, cs);
 
         let ptr = IdtPtr {
