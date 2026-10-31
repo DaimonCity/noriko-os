@@ -4,24 +4,24 @@
 
 mod idt;
 mod serial;
+mod shell;
 
 use bootloader_api::{BootInfo, entry_point};
 use core::panic::PanicInfo;
 
 entry_point!(kernel_main);
+const BUF_SIZE: usize = 64;
+
 fn kernel_main(_boot_info: &'static mut BootInfo) -> ! {
     idt::init();
-    serial_test_typing();
-    loop {
-        {}
-    }
+    shell::shell();
 }
 
-fn serial_test_typing() {
+fn _serial_test_typing() {
     kprintln!("type something:");
     loop {
         if let Some(b) = serial::try_read_byte() {
-            kprintln!("got byte: {:#x}", b);
+            kprintln!("got byte: {:#04x} {:?}", b, b as char);
         }
     }
 }
