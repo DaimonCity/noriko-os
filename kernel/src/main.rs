@@ -3,7 +3,7 @@
 #![no_main]
 
 mod serial;
-pub mod idt;
+mod idt;
 
 use bootloader_api::{BootInfo, entry_point};
 use core::panic::PanicInfo;
