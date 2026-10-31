@@ -11,7 +11,7 @@ use core::panic::PanicInfo;
 entry_point!(kernel_main);
 fn kernel_main(_boot_info: &'static mut BootInfo) -> ! {
     idt::init();
-    idt_test_invalid_opcode_exception();
+    idt_test_gpf_exception();
     loop {}
 }
 
@@ -38,6 +38,18 @@ fn idt_test_breakpoint_exception() {
 fn idt_test_invalid_opcode_exception() {
     kprintln!("start ud2 test");
     unsafe { core::arch::asm!("ud2"); }
+    kprintln!("unreachable");
+}
+
+fn idt_test_gpf_exception() {
+    kprintln!("start gpf test");
+    unsafe {
+        core::arch::asm!(
+        "mov ax, 0x28",
+        "mov ds, ax",
+        out("ax") _,
+        );
+    }
     kprintln!("unreachable");
 }
 
