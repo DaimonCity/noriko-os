@@ -63,14 +63,17 @@ pub struct InterruptStackFrame {
     ss: u64,
 }
 
-extern "x86-interrupt" fn divide_handler(frame: InterruptStackFrame) {
-    crate::kprintln!("EXCEPTION: DIVIDE ERROR\n{:#x?}", frame);
+extern "x86-interrupt" fn divide_error_handler(frame: InterruptStackFrame) {
+    crate::exp_println!("DIVIDE ERROR\n{:#x?}", frame);
     loop {}
 }
 extern "x86-interrupt" fn breakpoint_handler(frame: InterruptStackFrame) {
-    crate::kprintln!("EXCEPTION: BREAKPOINT\n{:#x?}", frame);
+    crate::exp_println!("BREAKPOINT\n{:#x?}", frame);
 }
-
+extern "x86-interrupt" fn invalid_opcode_handler(frame: InterruptStackFrame) {
+    crate::exp_println!("INVALID OPCODE (vector 6)\n{:#x?}", frame);
+    loop {}
+}
 fn read_cs() -> u16 {
     let value: u16;
     unsafe {
@@ -82,12 +85,20 @@ fn read_cs() -> u16 {
     value
 }
 
-pub fn init() {
+fn set_handler(index: usize, handler: extern "x86-interrupt" fn(InterruptStackFrame)) {
     let cs = read_cs();
-
+    if index >= IDT_SIZE { return; };
+    let entry = Entry::new(handler as *const () as u64, cs);
     unsafe {
-        IDT[0] = Entry::new(divide_handler as *const () as u64, cs);
-        IDT[3] = Entry::new(breakpoint_handler as *const () as u64, cs);
+        IDT[index] = entry;
+    }
+}
+
+pub fn init() {
+    unsafe {
+        set_handler(0, divide_error_handler);
+        set_handler(3, breakpoint_handler);
+        set_handler(6, invalid_opcode_handler);
 
         let ptr = IdtPtr {
             limit: (IDT_SIZE * size_of::<Entry>() - 1) as u16,

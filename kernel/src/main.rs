@@ -11,15 +11,8 @@ use core::panic::PanicInfo;
 entry_point!(kernel_main);
 fn kernel_main(_boot_info: &'static mut BootInfo) -> ! {
     idt::init();
-    idt_test_divide_exception();
+    idt_test_invalid_opcode_exception();
     loop {}
-}
-
-fn idt_test_breakpoint_exception() {
-    kprintln!("start breakpoint test");
-    kprintln!("IDT loaded");
-    unsafe { core::arch::asm!("int3"); }
-    kprintln!("returned from breakpoint handler");
 }
 
 fn idt_test_divide_exception() {
@@ -33,6 +26,19 @@ fn idt_test_divide_exception() {
         );
     }
     kprintln!("returned from divide handler");
+}
+
+fn idt_test_breakpoint_exception() {
+    kprintln!("start breakpoint test");
+    kprintln!("IDT loaded");
+    unsafe { core::arch::asm!("int3"); }
+    kprintln!("returned from breakpoint handler");
+}
+
+fn idt_test_invalid_opcode_exception() {
+    kprintln!("start ud2 test");
+    unsafe { core::arch::asm!("ud2"); }
+    kprintln!("unreachable");
 }
 
 #[panic_handler]

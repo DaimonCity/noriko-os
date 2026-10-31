@@ -47,3 +47,22 @@ macro_rules! kprintln {
     () => { $crate::kprint!("\n") };
     ($($arg:tt)*) => { $crate::kprint!("{}\n", format_args!($($arg)*)) };
 }
+
+#[macro_export]
+macro_rules! exp_print {
+    () => {
+    $crate::kprint!("EXCEPTION:")
+    };
+    ($($arg:tt)*) => {
+        $crate::kprint!("EXCEPTION: {}", format_args!($($arg)*))
+    };
+}
+#[macro_export]
+macro_rules! exp_println {
+    () => {
+    $crate::kprintln!("EXCEPTION:")
+    };
+    ($($arg:tt)*) => {
+        $crate::kprintln!("EXCEPTION: {}", format_args!($($arg)*))
+    };
+}
