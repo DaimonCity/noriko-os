@@ -2,8 +2,8 @@
 #![no_std]
 #![no_main]
 
-mod serial;
 mod idt;
+mod serial;
 
 use bootloader_api::{BootInfo, entry_point};
 use core::panic::PanicInfo;
@@ -11,11 +11,22 @@ use core::panic::PanicInfo;
 entry_point!(kernel_main);
 fn kernel_main(_boot_info: &'static mut BootInfo) -> ! {
     idt::init();
-    idt_test_gpf_exception();
-    loop {}
+    serial_test_typing();
+    loop {
+        {}
+    }
 }
 
-fn idt_test_divide_exception() {
+fn serial_test_typing() {
+    kprintln!("type something:");
+    loop {
+        if let Some(b) = serial::try_read_byte() {
+            kprintln!("got byte: {:#x}", b);
+        }
+    }
+}
+
+fn _idt_test_divide_exception() {
     kprintln!("start divide test");
     unsafe {
         core::arch::asm!(
@@ -28,20 +39,24 @@ fn idt_test_divide_exception() {
     kprintln!("returned from divide handler");
 }
 
-fn idt_test_breakpoint_exception() {
+fn _idt_test_breakpoint_exception() {
     kprintln!("start breakpoint test");
     kprintln!("IDT loaded");
-    unsafe { core::arch::asm!("int3"); }
+    unsafe {
+        core::arch::asm!("int3");
+    }
     kprintln!("returned from breakpoint handler");
 }
 
-fn idt_test_invalid_opcode_exception() {
+fn _idt_test_invalid_opcode_exception() {
     kprintln!("start ud2 test");
-    unsafe { core::arch::asm!("ud2"); }
+    unsafe {
+        core::arch::asm!("ud2");
+    }
     kprintln!("unreachable");
 }
 
-fn idt_test_gpf_exception() {
+fn _idt_test_gpf_exception() {
     kprintln!("start gpf test");
     unsafe {
         core::arch::asm!(

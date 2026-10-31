@@ -2,6 +2,29 @@ use core::arch::asm;
 use core::fmt::{self, Write};
 
 const COM1: u16 = 0x3F8;
+const COM1_STATUS: u16 = 0x3FD;
+
+unsafe fn inb(port: u16) -> u8 {
+    let value: u8;
+    unsafe {
+        asm!(
+        "in al, dx",
+        in("dx") port,
+        out("al") value,
+        options(nomem, nostack, preserves_flags),
+        );
+    }
+    value
+}
+
+pub fn try_read_byte() -> Option<u8> {
+    let status: u8 = unsafe { inb(COM1_STATUS) };
+
+    if (status & 0x01) != 0 {
+        return Some(unsafe { inb(COM1) });
+    }
+    None
+}
 
 // Записать один байт в порт ввода-вывода.
 unsafe fn out_b(port: u16, value: u8) {
@@ -25,7 +48,7 @@ struct Serial;
 
 impl Write for Serial {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        s.chars().into_iter().for_each(|c| write_byte(c as u8));
+        s.chars().for_each(|c| write_byte(c as u8));
         Ok(())
     }
 }
