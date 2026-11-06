@@ -2,9 +2,12 @@
 #![no_std]
 #![no_main]
 
+#![feature(const_convert)]
 mod idt;
 mod serial;
 mod shell;
+mod process;
+mod services;
 
 use bootloader_api::{BootInfo, entry_point};
 use core::panic::PanicInfo;
@@ -14,7 +17,17 @@ const BUF_SIZE: usize = 64;
 
 fn kernel_main(_boot_info: &'static mut BootInfo) -> ! {
     idt::init();
-    shell::shell();
+    process::init();
+    kprintln!("[Noriko OS] Kernel started successfully. Entering scheduler loop...");
+    main_loop()
+}
+
+extern "C" fn main_loop() -> ! {
+    loop {
+        process::schedule();
+        // Можно добавить легкую паузу или spin_loop, чтобы не сжигать CPU на 100%
+        core::hint::spin_loop();
+    }
 }
 
 fn _serial_test_typing() {
